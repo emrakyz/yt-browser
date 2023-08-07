@@ -1,0 +1,270 @@
+#!/bin/bash
+
+declare -A CHANNELS
+CHANNELS=(
+  ["Luke Smith"]="https://www.youtube.com/@LukeSmithxyz/videos"
+  ["Brodie Robertson"]="https://www.youtube.com/@BrodieRobertson/videos"
+  ["Mental Outlaw"]="https://www.youtube.com/@MentalOutlaw/videos"
+  ["Great Art Explained"]="https://www.youtube.com/@GreatArtExplained/videos"
+  ["The Art Assignment"]="https://www.youtube.com/@theartassignment/videos"
+  ["TATE"]="https://www.youtube.com/@Tate/videos"
+)
+
+declare -A CATEGORIES
+CATEGORIES=(
+  ["Tech"]="Luke Smith|Brodie Robertson|Mental Outlaw"
+  ["Art"]="Great Art Explained|The Art Assignment|TATE"
+)
+
+DATA_DIR="$HOME/.cache/youtube_channels"
+DOWNLOAD_DIR="$HOME/ytvideos"
+WATCH_LATER_LIST="${DATA_DIR}/watch_later.list"
+mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR"
+
+get_videos() {
+  local channel_name="$1"
+  local sort_option="$2"
+  local data_file="${DATA_DIR}/${channel_name}.tsv"
+
+  case $sort_option in
+    "@@sv")
+      sort -nr -t$'\t' -k3 "$data_file" | cut -f1
+      ;;
+    "@@sd")
+      sort -nr -t$'\t' -k4 "$data_file" | cut -f1
+      ;;
+    *)
+      sort -nr -t$'\t' -k5 "$data_file" | cut -f1
+      ;;
+  esac
+}
+
+video_url() {
+  local channel_name="$1"
+  local video_title="$2"
+  local data_file="${DATA_DIR}/${channel_name}.tsv"
+  grep -F "$video_title" "$data_file" | cut -f2
+}
+
+play_video() {
+  local video_title="$1"
+  local channel_name="$2"
+  local video_url=$(video_url "$channel_name" "$video_title")
+  # mpv --ytdl-format=best "$video_url"
+  mpv "$video_url"
+}
+
+download_video() {
+  local video_title="$1"
+  local channel_name="$2"
+  local video_url=$(video_url "$channel_name" "$video_title")
+  local channel_download_dir="${DOWNLOAD_DIR}/${channel_name}"
+  mkdir -p "$channel_download_dir"
+  yt-dlp -o "${channel_download_dir}/%(title)s.%(ext)s" "$video_url"
+}
+
+add_to_watch_later() {
+  local video_title="$1"
+  local channel_name="$2"
+  echo "${channel_name}: ${video_title}" >> "$WATCH_LATER_LIST"
+}
+
+play_watch_later() {
+  local line="$1"
+  local channel_name="${line%%: *}"
+  local video_title="${line#*: }"
+  play_video "$video_title" "$channel_name"
+}
+
+delete_from_watch_later() {
+  local video_line="$1"
+  local tmp_list="${DATA_DIR}/watch_later_tmp.list"
+  grep -vF "$video_line" "$WATCH_LATER_LIST" > "$tmp_list"
+  mv "$tmp_list" "$WATCH_LATER_LIST"
+}
+
+get_all_videos() {
+  local sort_option="$1"
+  local all_videos_file="${DATA_DIR}/all_videos.tsv"
+
+  # Combine all channel video data into a single file
+  rm -f "$all_videos_file"
+  for channel_name in "${!CHANNELS[@]}"; do
+    cat "${DATA_DIR}/${channel_name}.tsv" >> "$all_videos_file"
+  done
+
+  # Sort videos based on the specified criteria
+  case $sort_option in
+    "@@sv")
+      sort -nr -t$'\t' -k3 "$all_videos_file" | cut -f1
+      ;;
+    "@@sd")
+      sort -nr -t$'\t' -k4 "$all_videos_file" | cut -f1
+      ;;
+    *)
+      sort -nr -t$'\t' -k5 "$all_videos_file" | cut -f1
+      ;;
+  esac
+}
+
+browse_all_channels() {
+  while true; do
+    video_title=$(get_all_videos | rofi -dmenu -i -l 20 -p "Choose a video or enter @@sv or @@sd")
+
+    if [[ -z "$video_title" ]]; then
+      break
+    elif [[ $video_title == "@@sv" ]] || [[ $video_title == "@@sd" ]]; then
+      sort_option="$video_title"
+      video_title=$(get_all_videos "$sort_option" | rofi -i -l 20 -dmenu -i -p "Choose a video")
+    fi
+
+    if [[ -n "$video_title" ]] && [[ $video_title != "@@sv" ]] && [[ $video_title != "@@sd" ]]; then
+      for channel_name in "${!CHANNELS[@]}"; do
+        if grep -qF "$video_title" "${DATA_DIR}/${channel_name}.tsv"; then
+          break
+        fi
+      done
+
+      action=$(echo -e "Watch\nDownload\nAdd to Watch Later" | rofi -dmenu -i -l 3 -p "Choose an action for the video")
+
+      case $action in
+        Watch)
+          play_video "$video_title" "$channel_name"
+          ;;
+        Download)
+          download_video "$video_title" "$channel_name" && notify-send "Downloading has finished."
+          ;;
+        "Add to Watch Later")
+          add_to_watch_later "$video_title" "$channel_name"
+          ;;
+        *)
+          continue
+          ;;
+      esac
+    fi
+  done
+}
+
+strip_pango_markup() {
+  local input="$1"
+  echo "$input" | sed 's/<[^>]*>//g'
+}
+
+# Main script
+
+while true; do
+	main_choice=$(echo -e "<span foreground='red'>All Channels</span>\n<span foreground='yellow'>Categories</span>\n<span foreground='green'>Watch Later List</span>\n$(printf '%s\n' "${!CHANNELS[@]}")" | rofi -dmenu -i -l 20 -p "Choose an Option or a Channel" -markup-rows)
+	main_choice=$(strip_pango_markup "$main_choice")
+
+  if [[ -z "$main_choice" ]]; then
+    break
+  elif [[ $main_choice == "All Channels" ]]; then
+    browse_all_channels
+  elif [[ $main_choice == "Categories" ]]; then
+    while true; do
+      category=$(echo -e "$(printf '%s\n' "${!CATEGORIES[@]}")" | rofi -dmenu -i -l 12 -p "Choose a category")
+
+      if [[ -z "$category" ]]; then
+        break
+      fi
+
+      while true; do
+        IFS="|" read -ra channels <<< "${CATEGORIES[$category]}"
+        channel_name=$(printf '%s\n' "${channels[@]}" | rofi -dmenu -i -l 20 -p "Choose a channel")
+
+        if [[ -z "$channel_name" ]]; then
+          break
+        fi
+
+        while true; do
+          video_title=$(get_videos "$channel_name" | rofi -dmenu -i -l 20 -p "Choose a video")
+
+          if [[ -z "$video_title" ]]; then
+            break
+          elif [[ $video_title == "@@sv" ]] || [[ $video_title == "@@sd" ]]; then
+            sort_option="$video_title"
+            video_title=$(get_videos "$channel_name" "$sort_option" | rofi -dmenu -i -l 20 -p "Choose a video")
+          fi
+
+          if [[ -n "$video_title" ]] && [[ $video_title != "@@sv" ]] && [[ $video_title != "@@sd" ]]; then
+            action=$(echo -e "Watch\nDownload\nAdd to Watch Later" | rofi -dmenu -i -l 3 -p "Choose an action for the video")
+
+            case $action in
+              Watch)
+                play_video "$video_title" "$channel_name"
+                ;;
+              Download)
+                download_video "$video_title" "$channel_name" && notify-send "Downloading has finished."
+                ;;
+              "Add to Watch Later")
+                add_to_watch_later "$video_title" "$channel_name"
+                ;;
+              *)
+                echo "Invalid action"
+                ;;
+            esac
+          fi
+        done
+      done
+    done
+  elif [[ $main_choice == "Watch Later List" ]]; then
+    while true; do
+      video_line=$(cat "$WATCH_LATER_LIST" | rofi -dmenu -i -l 5 -p "Choose a video from Watch Later List")
+
+      if [[ -z "$video_line" ]]; then
+        break
+      fi
+
+      action=$(echo -e "Watch\nDownload\nDelete" | rofi -dmenu -i -l 3 -p "Choose an action for the video")
+
+      case $action in
+        Watch)
+          play_watch_later "$video_line"
+          ;;
+        Download)
+          channel_name="${video_line%%: *}"
+          video_title="${video_line#*: }"
+          download_video "$video_title" "$channel_name"
+          ;;
+        Delete)
+          delete_from_watch_later "$video_line"
+          ;;
+        *)
+          echo "Invalid action"
+          ;;
+      esac
+    done
+  else
+    channel_name="$main_choice"
+
+    while true; do
+      video_title=$(get_videos "$channel_name" | rofi -dmenu -i -l 20 -p "Choose a video or enter @@sv or @@sd to sort by view count or duration")
+
+      if [[ -z "$video_title" ]]; then
+        break
+      elif [[ $video_title == "@@sv" ]] || [[ $video_title == "@@sd" ]]; then
+        sort_option="$video_title"
+        video_title=$(get_videos "$channel_name" "$sort_option" | rofi -l 20 -dmenu -i -p "Choose a video")
+      fi
+
+      if [[ -n "$video_title" ]] && [[ $video_title != "@@sv" ]] && [[ $video_title != "@@sd" ]]; then
+        action=$(echo -e "Watch\nDownload\nAdd to Watch Later" | rofi -dmenu -i -l 3 -p "Choose an action for the video")
+
+        case $action in
+          Watch)
+            play_video "$video_title" "$channel_name"
+            ;;
+          Download)
+            download_video "$video_title" "$channel_name" && notify-send "Downloading has finished."
+            ;;
+          "Add to Watch Later")
+            add_to_watch_later "$video_title" "$channel_name"
+            ;;
+          *)
+            echo "Invalid action"
+            ;;
+        esac
+      fi
+    done
+  fi
+done
