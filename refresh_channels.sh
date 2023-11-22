@@ -2,6 +2,14 @@
 
 while ! ping -c 1 9.9.9.9 > /dev/null 2>&1; do sleep 0.5; done
 
+# "~/.local/share/channels.txt" looks like below:
+# Luke Smith=https://www.youtube.com/@LukeSmithxyz/videos
+# Mental Outlaw=https://www.youtube.com/@MentalOutlaw/videos
+
+# ~/.local/share/categories.txt looks like below:
+# Tech=Luke Smith|Mental Outlaw
+
+INSTALLER="sudo pacman -S --noconfirm"
 DATA_DIR="$HOME/.cache/youtube_channels"
 CHANNEL_LIST="$HOME/.local/share/channels.txt"
 mkdir -p "$DATA_DIR" && touch "$CHANNEL_LIST"
@@ -15,6 +23,15 @@ error_handling() {
 	    notify-send "'channels.txt' formatting is wrong."
 	    exit 1
     }
+    for pkg in yt-dlp mpv jq; do
+        command -v "$pkg" >/dev/null || {
+            notify-send "$pkg is not installed. Installing..."
+            $INSTALLER "$pkg" || {
+                notify-send "Failed to install $pkg."
+                exit 1
+            }
+    }
+    done
 }
 
 compare_data() {
