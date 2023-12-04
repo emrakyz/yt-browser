@@ -9,12 +9,12 @@ CUSTOM_LIST_DIR="$DATA_DIR/custom_lists"
 mkdir -p "$DATA_DIR" "$DOWNLOAD_DIR" "$CUSTOM_LIST_DIR"
 
 [ "$(find "$DATA_DIR" -maxdepth 1 -type f -name "*.tsv" 2>/dev/null)" ] || {
-	notify-send "You need to run "channelrefresh" script first."
+	notify-send "You need to run refresh_channels.sh script first."
         exit 1
 }
 
 DMENU() {
-    rofi -dmenu -i -l $1 -p "$2"
+    rofi -dmenu -i -l "$1" -p "$2"
 }
 
 sort_videos() {
@@ -39,7 +39,8 @@ video_url() {
   channel_name="$1"
   video_title="$2"
   data_file="$DATA_DIR/$channel_name.tsv"
-  sed -n "s/$video_title\t\([^\t]*\)\t.*$/\1/p" "$data_file"
+
+  grep -F "$video_title" "$data_file" | cut -f2
 }
 
 rofi_action() {
@@ -69,7 +70,7 @@ custom_list_menu() {
     [ -z "$list" ] && return
     case "$list" in
       *CREATE*)
-        new_list=$(DMENU 0 "Enter the name of the new list")
+        new_list=$(echo "" | DMENU 0 "Enter the name of the new list")
         [ -n "$new_list" ] && touch "$CUSTOM_LIST_DIR/$new_list"
         ;;
       *DELETE*)
@@ -87,7 +88,7 @@ custom_list_menu() {
 custom_list_video_menu() {
   list_name="$1"
   while true; do
-    video_info=$(cat "$CUSTOM_LIST_DIR/$list_name" | DMENU 20 "Choose a video")
+    video_info=$(DMENU 20 "Choose a video" < "$CUSTOM_LIST_DIR/$list_name")
     [ -z "$video_info" ] && return
     channel_name="${video_info%%: *}"
     video_title="${video_info##*: }"
@@ -154,28 +155,20 @@ get_all_videos() {
 }
 
 browse_all_channels() {
-  while true; do
-    video_title=$(get_all_videos | DMENU 20 "Choose a video or enter @@sv or @@sd")
+  while video_title=$(get_all_videos | DMENU 20 "Choose a video or enter @@sv or @@sd"); do
+    [ -z "$video_title" ] && break
+    [ "$video_title" = "@@sv" ] || [ "$video_title" = "@@sd" ] && { video_title=$(get_all_videos "$video_title" | DMENU 20 "Choose a video"); [ -z "$video_title" ] && continue; }
 
-    [ -z "$video_title" ] && break || {
-      [ "$video_title" = "@@sv" -o "$video_title" = "@@sd" ] &&
-      sort_option="$video_title" && video_title=$(get_all_videos "$sort_option" | DMENU 20 "Choose a video")
-    }
-
-    [ -n "$video_title" -a "$video_title" != "@@sv" -a "$video_title" != "@@sd" ] && {
-      while read -r line; do
-        channel_name="${line%%=*}"
-        grep -qF "$video_title" "${DATA_DIR}/${channel_name}.tsv" && break
-      done < "$CHANNEL_LIST"
-
-      video_action_menu "$video_title" "$channel_name"
-    }
+    grep -lF "$video_title" "${DATA_DIR}"/*.tsv | head -n 1 | while read -r video_file; do
+      video_action_menu "$video_title" "$(basename "$video_file" .tsv)"
+      break
+    done
   done
 }
 
 category_menu() {
   while true; do
-    category=$(echo "$(cut -d= -f1 "$CATEGORY_LIST")" | DMENU 12 "Choose a category")
+    category="$(cut -d= -f1 "$CATEGORY_LIST" | DMENU 12 "Choose a category")"
     [ -z "$category" ] && return
 
     channel_menu "$category"
@@ -187,7 +180,7 @@ channel_menu() {
   IFS="|"
 
   channels=$(sed -n "s/^${category}=\(.*\)$/\1/p" "$CATEGORY_LIST")
-  set -- $channels
+  set -- "$channels"
 
   while true; do
     channel_name=$(printf '%s\n' "$@" | DMENU 20 "Choose a channel")
@@ -203,7 +196,7 @@ video_menu() {
   while true; do
     video_title=$(get_videos "$channel_name" | DMENU 20 "Choose a video")
     [ -z "$video_title" ] && return
-    [ "$video_title" = "@@sv" -o "$video_title" = "@@sd" ] && {
+    [ "$video_title" = "@@sv" ] || [ "$video_title" = "@@sd" ] && {
       sort_option="$video_title"
       video_title=$(get_videos "$channel_name" "$sort_option" | DMENU 20 "Choose a video")
     }
@@ -229,7 +222,7 @@ video_action_menu() {
       "SEND TO A LIST")
         list_name=$(find "$CUSTOM_LIST_DIR" -maxdepth 1 -type f -exec basename {} \; | DMENU 10 "Choose a list")
         [ -n "$list_name" ] && add_to_list "$video_title" "$channel_name" "$list_name" &&
-		notify-send ""$video_title" is added to the list: "$list_name""
+		notify-send "$video_title is added to the list: $list_name"
         ;;
       *)
         return
