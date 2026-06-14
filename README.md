@@ -1,8 +1,8 @@
 An older version is showcased by [Luke Smith](https://www.youtube.com/@LukeSmithxyz) here: [Starts at 36:32](https://youtu.be/slIxE8oYzus?si=z5hOoShGAKEg-rHq&t=2192)
 
-The script works extremely fast except the first time to update the whole data. This is parallel. The biggest channel determines the total time. You can set a cronjob for this. 
-
-This script is a sophisticated and ingenious tool designed to streamline your **YouTube** experience by organizing and managing your favorite YouTube channels, which allows you to browse and watch videos directly within the script without ever visiting YT website. You can **assign the channels with various categories such as "Tech", "Science", "Sports"**, etc. The videos can be played using the 'mpv' media player. Moreover, the script allows you to **sort videos based on view count or duration**; download videos; and even maintain a **"Watch Later"** list. If you combine this script with "[SponsorBlock](https://github.com/po5/mpv_sponsorblock)" lua script created for "mpv", then you will have the ultimate experience. SponsorBlock removes all sponsored segments in a video including intros, outros or similar unnecessary parts. It's normally a browser extension but is also available for "mpv".
+- Better **YouTube** experience: Manage your favorite YouTube channels
+- Browse and watch videos directly within the script without ever visiting YT website
+- Combine this script with "[SponsorBlock](https://github.com/po5/mpv_sponsorblock)", then you will have the ultimate experience. It removes all sponsored segments in a video including intros, outros or similar unnecessary parts.
 
 **_No browsers, accounts, distractions, crappy algorithm and recommendations, advertisements, sponsors, intros, outros, fillers or empty spaces. We eliminate them all._**
 
