@@ -1,10 +1,23 @@
-The script works extremely fast except the first time to update the whole data. It takes about **_2 minutes_** to update the whole database with **_80_** different channels. This is parallel though, the biggest channel determines the total time. You can set a cronjob for this. It's not a heavy work for the PC. It justs fetch the text data with yt-dlp. **_Video example below:_**
+An older version is showcased by [Luke Smith](https://www.youtube.com/@LukeSmithxyz) here: [Starts at 36:32](https://youtu.be/slIxE8oYzus?si=z5hOoShGAKEg-rHq&t=2192)
 
-This script is a sophisticated and ingenious tool designed to streamline your **YouTube** experience by organizing and managing your favorite YouTube channels, allowing you to browse and watch videos directly within the script without ever visiting its website. You can **assign the channels with various categories such as "Tech", "Science", "Sports"**, etc. The videos can be played using the 'mpv' media player. Moreover, the script allows you to **sort videos based on view count or duration**; download videos; and even maintain a **"Watch Later"** list. If you combine this script with "[SponsorBlock](https://github.com/po5/mpv_sponsorblock)" lua script created for "mpv", then you will have the ultimate experience. SponsorBlock removes all sponsored segments in a video including intros, outros or similar unnecessary parts. It's normally a browser extension but is also available for "mpv".
+The script works extremely fast except the first time to update the whole data. This is parallel. The biggest channel determines the total time. You can set a cronjob for this. 
+
+This script is a sophisticated and ingenious tool designed to streamline your **YouTube** experience by organizing and managing your favorite YouTube channels, which allows you to browse and watch videos directly within the script without ever visiting YT website. You can **assign the channels with various categories such as "Tech", "Science", "Sports"**, etc. The videos can be played using the 'mpv' media player. Moreover, the script allows you to **sort videos based on view count or duration**; download videos; and even maintain a **"Watch Later"** list. If you combine this script with "[SponsorBlock](https://github.com/po5/mpv_sponsorblock)" lua script created for "mpv", then you will have the ultimate experience. SponsorBlock removes all sponsored segments in a video including intros, outros or similar unnecessary parts. It's normally a browser extension but is also available for "mpv".
 
 **_No browsers, accounts, distractions, crappy algorithm and recommendations, advertisements, sponsors, intros, outros, fillers or empty spaces. We eliminate them all._**
 
-**Required Programs:** dmenu | mpv | **_jq_** | yt-dlp
+**Required Programs:** dmenu | mpv | yt-dlp
+
+# Categories
+<img width="528" height="644" alt="image" src="https://github.com/user-attachments/assets/44de1db7-a78c-44a5-8fff-6509c5be3257" />
+
+# Instant Filtering from All Channels You Follow
+<img width="1260" height="416" alt="image" src="https://github.com/user-attachments/assets/ce5de1fb-35fb-47e1-b947-57002b90d420" />
+
+# Watch / Download / Playlist & Notifications
+<img width="372" height="294" alt="image" src="https://github.com/user-attachments/assets/3dce9ef0-a4ba-4c6e-a1ab-bb676be32e82" />
+
+<img width="370" height="144" alt="image" src="https://github.com/user-attachments/assets/d6b67de6-bbe9-45b8-b9d1-dba6e553f5ca" />
 
 ### FEATURES
 - Browse all videos from all channels you set at the same time. You can filter titles through dmenu.
@@ -16,8 +29,8 @@ This script is a sophisticated and ingenious tool designed to streamline your **
 - You won't see the URLs or any unnecessary things inside dmenu. Just the titles.
 
 ### JUSTIFICATION
-This script is incredibly beneficial for those who seek a minimalist and focused approach to consuming content on YouTube. By providing a CLI-based interface (dmenu), the script reduces distractions and clutter that are commonly encountered on the Youtube website. It allows users to personalize their content consumption and manage channels more effectively. The script is also remarkably efficient and easy to navigate, providing a user-friendly experience that saves time and promotes productivity.
-
-The script is organized into functions that each perform a specific task, such as updating channel data, retrieving video titles, playing videos, downloading videos, adding videos to the watch later list, and browsing all channels. These functions are called by the main script to provide the user with various options for navigating and interacting with the videos.
-
-The script makes use of various Bash features such as associative arrays, shell redirection and piping, to simplify and streamline the code. It also uses conditionals and loops to handle different user input and error cases. Overall, this script is a powerful and flexible tool for browsing, watching, organizing YouTube channels, and it provides a great example of Bash usage to automate and streamline complex tasks.
+- A minimalist and focused approach to consuming content on YouTube
+- Reduce distractions and clutter that are commonly encountered YT
+- Personalize content consumption and manage channels more effectively
+- Remarkably efficient and easy to navigate
+- User-friendly experience that saves time and promotes productivity
