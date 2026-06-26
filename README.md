@@ -20,17 +20,10 @@ An older version is showcased by [Luke Smith](https://www.youtube.com/@LukeSmith
 <img width="370" height="144" alt="image" src="https://github.com/user-attachments/assets/d6b67de6-bbe9-45b8-b9d1-dba6e553f5ca" />
 
 ### FEATURES
-- Browse all videos from all channels you set at the same time. You can filter titles through dmenu.
-- Browse a channel's videos.
-- Select a channel either from the main menu or inside a Category.
-- Watch, Download or Put videos in a "Watch Later List".
-- Sort videos by view or duration. The default sort is upload date. The only problem is, we can't have the exact upload date, so we can't apply much more advanced filtering. It can be done but it makes fetching the data for the first time too slow.
-- The menus have a complex loop system. It always continues where you left off. The script doesn't close itself when you make a selection. So you don't have to run the script over and over again and get to where you left off. You can also press Escape to return to a prior menu.
-- You won't see the URLs or any unnecessary things inside dmenu. Just the titles.
-
-### JUSTIFICATION
-- A minimalist and focused approach to consuming content on YouTube
-- Reduce distractions and clutter that are commonly encountered YT
-- Personalize content consumption and manage channels more effectively
-- Remarkably efficient and easy to navigate
-- User-friendly experience that saves time and promotes productivity
+- Browse all videos from all channels you set at the same time
+- Filter titles via `dmenu`
+- Browse a channel's videos
+- Select a channel either from the main menu or inside a Category
+- Watch, Download or Add to "Watch Later List"
+- Sort videos by date, view or duration
+- NO URLs or any unnecessary entries in `dmenu`; Just titles
